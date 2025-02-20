@@ -27,7 +27,7 @@ export default async function Navbar() {
                   Dashboard
                 </Button>
               </Link>
-              <UserProfile supabase={supabase} />
+              <UserProfile  />
             </>
           ) : (
             <>
