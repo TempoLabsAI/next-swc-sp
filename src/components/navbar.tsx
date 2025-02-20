@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { createClient } from '../../supabase/server'
 import { Button } from './ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
-import { UserCircle } from 'lucide-react'
+import { User, UserCircle } from 'lucide-react'
+import UserProfile from './user-profile'
 
 export default async function Navbar() {
   const supabase = createClient()
@@ -27,20 +27,7 @@ export default async function Navbar() {
                   Dashboard
                 </Button>
               </Link>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <UserCircle className="h-6 w-6" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {/* <DropdownMenuItem onClick={async () => {
-                    await supabase.auth.signOut()
-                  }}>
-                    Sign out
-                  </DropdownMenuItem> */}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <UserProfile supabase={supabase} />
             </>
           ) : (
             <>
