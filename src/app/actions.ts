@@ -5,6 +5,7 @@ import { createClient } from "../../supabase/server";
 import { encodedRedirect } from "@/utils/utils";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { Polar } from "@polar-sh/sdk";
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -33,6 +34,9 @@ export const signUpAction = async (formData: FormData) => {
     },
   });
 
+  console.log("After signUp", error);
+
+
   if (error) {
     console.error(error.code + " " + error.message);
     return encodedRedirect("error", "/sign-up", error.message);
@@ -40,13 +44,14 @@ export const signUpAction = async (formData: FormData) => {
 
   if (user) {
     try {
-
       const { error: updateError } = await supabase
         .from('users')
         .insert({
-          user_id: user.id,
+          id: user.id,
           name: fullName,
+          full_name: fullName,
           email: email,
+          user_id: user.id,
           token_identifier: user.id,
           created_at: new Date().toISOString()
         });
@@ -197,4 +202,37 @@ export const checkUserSubscription = async (userId: string) => {
   }
 
   return !!subscription;
+};
+
+export const manageSubscriptionAction = async (userId: string) => {
+  const supabase = await createClient();
+
+  const { data: subscription, error } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .single();
+
+  if (error) {
+    console.error('Error checking subscription status:', error);
+    return false;
+  }
+
+  const polar = new Polar({
+    server: "sandbox",
+    accessToken: process.env.POLAR_ACCESS_TOKEN,
+  });
+
+  try {
+    const result = await polar.customerSessions.create({
+      customerId: subscription.customer_id,
+    });
+
+    // Only return the URL to avoid Convex type issues
+    return { url: result.customerPortalUrl };
+  } catch (error) {
+    console.error('Error managing subscription:', error);
+    return { error: 'Error managing subscription' };
+  }
 };

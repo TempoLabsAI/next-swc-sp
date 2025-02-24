@@ -2,11 +2,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "../../../../../supabase/server";
 
-const storeWebhookEvent = async (supabase: any, body: any, status: 'pending' | 'success' | 'error' = 'pending', error?: any) => {
+const storeWebhookEvent = async (supabase: any, body: any) => {
     try {
         const { data, error: insertError } = await supabase
             .from("webhook_events")
             .insert({
+                event_type: body.type,
                 type: body.type,
                 polar_event_id: body.data.id,
                 created_at: new Date().toISOString(),
@@ -205,7 +206,7 @@ export async function POST(req: NextRequest) {
 
         // Update event status to error
         if (eventId) {
-            await storeWebhookEvent(supabase, req.body, 'error', error);
+            await storeWebhookEvent(supabase, req.body);
         }
 
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

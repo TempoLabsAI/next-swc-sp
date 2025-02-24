@@ -1,8 +1,11 @@
 import DashboardNavbar from "@/components/dashboard-navbar";
-import { createClient } from "../../../supabase/server";
+import ManageSubscription from "@/components/manage-subscription";
+import { SubscriptionCheck } from "@/components/subscription-check";
 import { InfoIcon, UserCircle } from "lucide-react";
 import { redirect } from "next/navigation";
-import { SubscriptionCheck } from "@/components/subscription-check";
+import { createClient } from "../../../supabase/server";
+import { manageSubscriptionAction } from "../actions";
+import { Suspense } from "react";
 
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -15,11 +18,22 @@ export default async function Dashboard() {
     return redirect("/sign-in");
   }
 
+  const result = await manageSubscriptionAction(user?.id);
+
+  if (!result) {
+    return redirect("/pricing");
+  }
+
   return (
     <SubscriptionCheck>
       <DashboardNavbar />
       <main className="w-full">
         <div className="container mx-auto px-4 py-8 flex flex-col gap-8">
+          <div className="flex justify-end">
+            <Suspense fallback={<div>Loading...</div>}>
+              {result?.url && <ManageSubscription redirectUrl={result?.url!} />}
+            </Suspense>
+          </div>
           {/* Header Section */}
           <header className="flex flex-col gap-4">
             <h1 className="text-3xl font-bold">Dashboard</h1>
