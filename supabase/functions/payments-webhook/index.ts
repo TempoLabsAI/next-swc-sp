@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+
+import { validateEvent } from 'npm:@polar-sh/sdk/webhooks';
+
 
 // Types
 type WebhookEvent = {
@@ -44,52 +46,20 @@ async function verifyPolarSignature(
   body: string
 ): Promise<boolean> {
   try {
-    // Get the webhook signature from the headers
-    const signature = request.headers.get('polar-signature');
-    if (!signature) {
-      console.error('No polar-signature header found');
-      return false;
-    }
+    // Internally validateEvent uses headers as a dictionary e.g. headers["webhook-id"]
+    // So we need to convert the headers to a dictionary 
+    // (request.headers is a Headers object which is accessed as request.headers.get("webhook-id"))
+    const headers: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      headers[key] = value;
+    });
 
-    // Get the webhook secret from environment variables
-    const webhookSecret = Deno.env.get('POLAR_WEBHOOK_SECRET');
-    if (!webhookSecret) {
-      console.error('POLAR_WEBHOOK_SECRET environment variable not set');
-      return false;
-    }
-
-    // Parse the signature header
-    // Polar signatures are in the format: v1,<signature>
-    const [version, receivedSignature] = signature.split(',');
-    if (version !== 'v1' || !receivedSignature) {
-      console.error('Invalid signature format');
-      return false;
-    }
-
-    // Create a message to sign
-    // For Polar, we need to create an HMAC SHA-256 of the raw request body
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(webhookSecret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
-
-    // Sign the message
-    const signatureBytes = await crypto.subtle.sign(
-      'HMAC',
-      key,
-      encoder.encode(body)
-    );
-
-    // Convert the signature to base64
-    const calculatedSignature = base64Encode(new Uint8Array(signatureBytes));
-
-    // Compare signatures using a constant-time comparison
-    // This helps prevent timing attacks
-    return receivedSignature === calculatedSignature;
+    validateEvent(
+      body,
+      headers,
+      Deno.env.get('POLAR_WEBHOOK_SECRET'),
+    )
+    return true;
   } catch (error) {
     console.error('Error verifying webhook signature:', error);
     return false;
@@ -441,22 +411,17 @@ serve(async (req) => {
     // Clone the request to get the body as text for signature verification
     const clonedReq = req.clone();
     const rawBody = await clonedReq.text();
+    const isValidSignature = await verifyPolarSignature(req, rawBody);
     
-    // Verify the webhook signature
-    // TODO: AI -> make this work, the polar signature is not in the plan-signature header
-    // It uses the Standard Webhooks
-    // const isValidSignature = await verifyPolarSignature(req, rawBody);
-    
-    // if (!isValidSignature) {
-    //   console.error('Invalid webhook signature');
-    //   return new Response(
-    //     JSON.stringify({ error: 'Invalid webhook signature' }),
-    //     { 
-    //       status: 401,
-    //       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    //     }
-    //   );
-    // }
+    if (!isValidSignature) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid webhook signature' }),
+        { 
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
     
     // Parse the body as JSON
     const body = JSON.parse(rawBody);
