@@ -28,7 +28,7 @@ export default function PricingCard({ item, user }: {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('supabase-funcitons-create-checkout', {
+      const { data, error } = await supabase.functions.invoke('supabase-functions-create-checkout', {
         body: {
           productPriceId: priceId,
           successUrl: `${window.location.origin}/dashboard`,
