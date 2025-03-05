@@ -443,18 +443,20 @@ serve(async (req) => {
     const rawBody = await clonedReq.text();
     
     // Verify the webhook signature
-    const isValidSignature = await verifyPolarSignature(req, rawBody);
+    // TODO: AI -> make this work, the polar signature is not in the plan-signature header
+    // It uses the Standard Webhooks
+    // const isValidSignature = await verifyPolarSignature(req, rawBody);
     
-    if (!isValidSignature) {
-      console.error('Invalid webhook signature');
-      return new Response(
-        JSON.stringify({ error: 'Invalid webhook signature' }),
-        { 
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    // if (!isValidSignature) {
+    //   console.error('Invalid webhook signature');
+    //   return new Response(
+    //     JSON.stringify({ error: 'Invalid webhook signature' }),
+    //     { 
+    //       status: 401,
+    //       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    //     }
+    //   );
+    // }
     
     // Parse the body as JSON
     const body = JSON.parse(rawBody);
