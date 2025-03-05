@@ -11,6 +11,7 @@ import {
     CardTitle,
 } from "./ui/card";
 import { User } from "@supabase/supabase-js";
+import { Check } from "lucide-react";
 
 export default function PricingCard({ item, user }: {
     item: any,
@@ -79,9 +80,7 @@ export default function PricingCard({ item, user }: {
                 <ul className="space-y-4">
                     {item.description.split('\n').map((desc: string, index: number) => (
                         <li key={index} className="flex items-start gap-3">
-                            <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                            </svg>
+                            <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
                             <span className="text-gray-600">{desc.trim()}</span>
                         </li>
                     ))}
