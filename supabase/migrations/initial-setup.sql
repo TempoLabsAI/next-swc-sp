@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id text REFERENCES public.users(user_id),
     polar_id text UNIQUE,
-    price_id text,
     polar_price_id text,
     currency text,
     interval text,
@@ -31,7 +30,6 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
     cancel_at_period_end boolean,
     amount bigint,
     started_at bigint,
-    ends_at bigint,
     ended_at bigint,
     canceled_at bigint,
     customer_cancellation_reason text,
@@ -48,13 +46,14 @@ CREATE INDEX IF NOT EXISTS subscriptions_user_id_idx ON public.subscriptions(use
 
 -- Create webhook_events table
 CREATE TABLE IF NOT EXISTS public.webhook_events (
-    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,  
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     event_type text NOT NULL,
     type text NOT NULL,
     polar_event_id text,
     data jsonb,
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-    modified_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+    modified_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+    error text
 );
 
 CREATE INDEX IF NOT EXISTS webhook_events_type_idx ON public.webhook_events(type);
@@ -91,18 +90,6 @@ BEGIN
         -- Create policy for subscriptions
         EXECUTE 'CREATE POLICY "Users can view own subscriptions" ON public.subscriptions
                 FOR SELECT USING (auth.uid()::text = user_id)';
-    END IF;
-    
-    -- Check if the policy for webhook_events exists
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies 
-        WHERE schemaname = 'public' 
-        AND tablename = 'webhook_events' 
-        AND policyname = 'Service role can manage webhook events'
-    ) THEN
-        -- Create policy for webhook_events to allow service role access
-        EXECUTE 'CREATE POLICY "Service role can manage webhook events" ON public.webhook_events
-                FOR ALL TO service_role USING (true)';
     END IF;
 END
 $$;
