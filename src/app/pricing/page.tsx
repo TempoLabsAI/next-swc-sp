@@ -7,10 +7,9 @@ export default async function Pricing() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { result } = await api.products.list({
-        isArchived: false,
-        organizationId: process.env.POLAR_ORGANIZATION_ID!,
-    })
+    const { data: plans, error } = await supabase.functions.invoke('get-plans');
+
+    const result = plans?.items;
 
     return (
         <>
@@ -24,7 +23,7 @@ export default async function Pricing() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
-                    {result?.items?.map((item) => (
+                    {result?.map((item: any) => (
                         <PricingCard key={item.id} item={item} user={user} />
                     ))}
                 </div>

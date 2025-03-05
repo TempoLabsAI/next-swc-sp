@@ -1,6 +1,6 @@
 "use client";
 
-import { checkoutSessionAction } from "@/app/actions";
+import { supabase } from "../../supabase/supabase";
 import { Button } from "./ui/button";
 import {
     Card,
@@ -17,30 +17,46 @@ export default function PricingCard({ item, user }: {
     user: User | null
 }) {
 
-    const handleCheckout = async (price: any) => {
-        if (!user) {
-            // Redirect to sign in if no user
-            window.location.href = '/sign-in';
-            return;
-        }
+  // Handle checkout process
+  const handleCheckout = async (priceId: string) => {
 
-        const session = await checkoutSessionAction({
-            productPriceId: price.id,
-            successUrl: `${window.location.origin}/success`,
-            customerEmail: user.email!,
-            metadata: {
-                userId: user.id,
-                email: user.email!,
-                subscription: 'true'
-            }
-        })
-
-        if (!session.url) {
-            return;
-        }
-
-        window.location.href = session.url!;
+    console.log("priceId", priceId);
+    if (!user) {
+      // Redirect to login if user is not authenticated
+      window.location.href = "/login?redirect=pricing";
+      return;
     }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          productPriceId: priceId,
+          successUrl: `${window.location.origin}/dashboard`,
+          customerEmail: user.email || '',
+          metadata: {
+            user_id: user.id,
+          } 
+        },
+        headers: {
+          'X-Customer-Email': user.email || '',
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Redirect to Stripe checkout
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+    } 
+  };
+
 
     return (
         <Card className={`w-[350px] relative overflow-hidden ${item.popular ? 'border-2 border-blue-500 shadow-xl scale-105' : 'border border-gray-200'}`}>
@@ -59,7 +75,7 @@ export default function PricingCard({ item, user }: {
                     <span className="text-gray-600">/month</span>
                 </CardDescription>
             </CardHeader>
-            <CardContent className="relative">
+            {item.description &&<CardContent className="relative">
                 <ul className="space-y-4">
                     {item.description.split('\n').map((desc: string, index: number) => (
                         <li key={index} className="flex items-start gap-3">
@@ -70,11 +86,11 @@ export default function PricingCard({ item, user }: {
                         </li>
                     ))}
                 </ul>
-            </CardContent>
+            </CardContent>}
             <CardFooter className="relative">
                 <Button 
                     onClick={async () => {
-                        await handleCheckout(item?.prices?.[0])
+                        await handleCheckout(item?.prices?.[0]?.id)
                     }} 
                     className={`w-full py-6 text-lg font-medium ${
                         item.popular 

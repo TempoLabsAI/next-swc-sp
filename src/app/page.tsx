@@ -10,16 +10,15 @@ export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { result } = await api.products.list({
-    isArchived: false,
-    organizationId: process.env.POLAR_ORGANIZATION_ID!,
-  })
+  const { data: plans, error } = await supabase.functions.invoke('get-plans');
+
+  const result = plans?.items;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <Navbar />
       <Hero />
-      
+
       {/* Features Section */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
@@ -27,7 +26,7 @@ export default async function Home() {
             <h2 className="text-3xl font-bold mb-4">Why Choose Us</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">We're revolutionizing the way teams work with cutting-edge technology and unparalleled service.</p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               { icon: <Zap className="w-6 h-6" />, title: "Lightning Fast", description: "10x faster than traditional solutions" },
@@ -73,7 +72,7 @@ export default async function Home() {
             <p className="text-gray-600 max-w-2xl mx-auto">Choose the perfect plan for your needs. No hidden fees.</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {result?.items?.map((item) => (
+            {result?.map((item: any) => (
               <PricingCard key={item.id} item={item} user={user} />
             ))}
           </div>
