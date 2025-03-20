@@ -1,11 +1,10 @@
 "use server";
 
 import { api } from "@/lib/polar";
-import { createClient } from "../../supabase/server";
 import { encodedRedirect } from "@/utils/utils";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { Polar } from "@polar-sh/sdk";
+import { redirect } from "next/navigation";
+import { createClient } from "../../supabase/server";
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
