@@ -1,10 +1,9 @@
+import Footer from "@/components/footer";
 import Hero from "@/components/hero";
 import Navbar from "@/components/navbar";
 import PricingCard from "@/components/pricing-card";
-import Footer from "@/components/footer";
-import { api } from "@/lib/polar";
+import { ArrowUpRight, CheckCircle2, Shield, Users, Zap } from 'lucide-react';
 import { createClient } from "../../supabase/server";
-import { ArrowUpRight, CheckCircle2, Zap, Shield, Users } from 'lucide-react';
 
 export default async function Home() {
   const supabase = await createClient();

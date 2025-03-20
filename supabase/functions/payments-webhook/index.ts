@@ -98,7 +98,6 @@ async function storeWebhookEvent(
 
 // Event handlers
 async function handleSubscriptionCreated(supabaseClient: any, body: any) {
-  console.log('Handling subscription created:', body.data.id);
 
   try {
     const { data, error } = await supabaseClient
@@ -154,8 +153,6 @@ async function handleSubscriptionCreated(supabaseClient: any, body: any) {
 }
 
 async function handleSubscriptionUpdated(supabaseClient: any, body: any) {
-  console.log('Handling subscription updated:', body.data.id);
-
   try {
     const { data: existingSub } = await supabaseClient
       .from("subscriptions")
@@ -203,8 +200,6 @@ async function handleSubscriptionUpdated(supabaseClient: any, body: any) {
 }
 
 async function handleSubscriptionActive(supabaseClient: any, body: any) {
-  console.log('Handling subscription active:', body.data.id);
-
   try {
     const { data: activeSub } = await supabaseClient
       .from("subscriptions")
@@ -247,8 +242,6 @@ async function handleSubscriptionActive(supabaseClient: any, body: any) {
 }
 
 async function handleSubscriptionCanceled(supabaseClient: any, body: any) {
-  console.log('Handling subscription canceled:', body.data.id);
-
   try {
     const { data: canceledSub } = await supabaseClient
       .from("subscriptions")
@@ -295,8 +288,6 @@ async function handleSubscriptionCanceled(supabaseClient: any, body: any) {
 }
 
 async function handleSubscriptionUncanceled(supabaseClient: any, body: any) {
-  console.log('Handling subscription uncanceled:', body.data.id);
-
   try {
     const { data: uncanceledSub } = await supabaseClient
       .from("subscriptions")
@@ -342,8 +333,6 @@ async function handleSubscriptionUncanceled(supabaseClient: any, body: any) {
 }
 
 async function handleSubscriptionRevoked(supabaseClient: any, body: any) {
-  console.log('Handling subscription revoked:', body.data.id);
-
   try {
     const { data: revokedSub } = await supabaseClient
       .from("subscriptions")
@@ -388,8 +377,6 @@ async function handleSubscriptionRevoked(supabaseClient: any, body: any) {
 }
 
 async function handleOrderCreated(supabaseClient: any, body: any) {
-  console.log('Handling order created:', body.data.id);
-  // Orders are handled through the subscription events
   return new Response(
     JSON.stringify({ message: "Order created event received" }),
     { 
@@ -425,7 +412,6 @@ serve(async (req) => {
     
     // Parse the body as JSON
     const body = JSON.parse(rawBody);
-    console.log('Processing webhook event:', body.type);
 
     // Create Supabase client
     const supabaseClient = createClient(
@@ -454,7 +440,6 @@ serve(async (req) => {
       case 'order.created':
         return await handleOrderCreated(supabaseClient, body);
       default:
-        console.log(`Unhandled event type: ${body.type}`);
         return new Response(
           JSON.stringify({ message: `Unhandled event type: ${body.type}` }),
           { 

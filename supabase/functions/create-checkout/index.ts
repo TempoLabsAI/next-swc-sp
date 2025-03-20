@@ -32,7 +32,6 @@ serve(async (req) => {
       metadata,
     });
 
-    console.log("result", result)
 
     return new Response(
       JSON.stringify({ sessionId: result.id, url: result.url }),
